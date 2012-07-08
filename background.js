@@ -1,8 +1,4 @@
 var streams = [];
-// var lastFetch = new Date();
-// if (!localStorage['limit']) localStorage['limit'] = 50;
-// if (!localStorage['category']) localStorage['category'] = 'All';
-
 
 function getStreams() {
 	console.log('Fetching streams @ ' + new Date());
@@ -36,6 +32,12 @@ function prepareData(data) {
 	$.each(data, function(k, stream) {
 		if(stream.subcatshort == 'SC2') {
 			stream.thumb = stream.thumb.replace("150x113", "320x240");
+			stream.countString = stream.count.toString();
+			// format string
+			// from 12345678 to 12 345 678
+			while (stream.countString.match(/\d{4}$|\d{3} /)) {
+				stream.countString = stream.countString.replace(/(\d{3})$|(\d{3}) /, ' $1');
+			}
 			returnData.push(stream);
 		}
 	})
@@ -62,7 +64,6 @@ function setBadge(stream)
 	}
 }
 
-console.log("dzialam");
 chrome.extension.onMessage.addListener(function(request, sender, sendResponse) {
 	console.log("got details");
 	sendResponse(streams);

@@ -6,7 +6,7 @@ chrome.extension.sendMessage({cosInnego: "hello"}, function(response){
     var row = $('<div class="main"/>');
       $('<img/>').attr({'src': stream.thumb}).appendTo(row);
       $('<div/>')
-        .append($('<div/>').text(stream.count + ' viewers'))
+        .append($('<div/>').text(stream.countString + ' viewers'))
         .append($('<div/>').text(stream.title))
         .appendTo(row);
 
