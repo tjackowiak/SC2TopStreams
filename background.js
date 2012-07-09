@@ -1,73 +1,67 @@
-var streams = [];
+var twitchTvPage = "http://www.twitch.tv/directory/StarCraft%20II:%20Wings%20of%20Liberty"
+var badgeColors = {2: "#A8A8A8", 7: "#007700", 15: "#dd7700", 25: "#dd0000"}
+var streams = []
 
-function getStreams() {
-	console.log('Fetching streams @ ' + new Date());
-
-	var req = new XMLHttpRequest();
-	req.open(
-	    "GET",
-	    "http://whosstreaming.xocekim.com/json/?" +
-	    	"callback=&" +
-	        "limit=100&" +
-	        "category=Gaming",
-	    true);
-	req.onload = onSuccess;
-	req.send(null);
-}
-
-function onSuccess(data) {
-	console.log('Received streams');
-	streams = prepareData(data);
-	setBadge(streams[0]);
-}
-
-function prepareData(data) {
-	// parsing data
-	data = data.target.responseText;
-	data = data.substring(1, data.length - 1);
-	data = JSON.parse(data);
-
-	// filterign data
-	returnData = [];
-	$.each(data, function(k, stream) {
-		if(stream.subcatshort == 'SC2') {
-			stream.thumb = stream.thumb.replace("150x113", "320x240");
-			stream.countString = stream.count.toString();
-			// format string
-			// from 12345678 to 12 345 678
-			while (stream.countString.match(/\d{4}$|\d{3} /)) {
-				stream.countString = stream.countString.replace(/(\d{3})$|(\d{3}) /, ' $1');
-			}
-			returnData.push(stream);
-		}
-	})
-	return returnData;
-}
-
-function setBadge(stream)
-{
-	maxCount = stream.count / 1000;
+function setBadge(maxViewersCount) {
+	maxCount = maxViewersCount / 1000;
 	maxCount = Math.round(maxCount);
-	if(maxCount > 7)
-	{
-		chrome.browserAction.setBadgeText({text: maxCount.toString() + 'k'});
-		if(maxCount > 20)
-			chrome.browserAction.setBadgeBackgroundColor({color: "#dd0000"});
-		else if(maxCount > 10)
-			chrome.browserAction.setBadgeBackgroundColor({color: "#dd7700"});
-		else
-			chrome.browserAction.setBadgeBackgroundColor({color: "#007700"});
+	color = false;
+
+	for (badge in badgeColors) {
+		if (maxCount >= badge) {
+			color = badgeColors[badge]
+		}
 	}
-	else
-	{
+
+	if (color) {
+		chrome.browserAction.setBadgeText({text: maxCount.toString() + 'k'});	
+		chrome.browserAction.setBadgeBackgroundColor({color: color});
+	}
+	else {
 		chrome.browserAction.setBadgeText({text: ''});
 	}
 }
 
+function prepareData(data) {
+	returnData = []
+	data.children().each(function(index) {
+		viewers = $(this).find('div>p.channelname span').text()
+		channel = $(this).find('div>p.channelname a').text()
+		img = $(this).find('a.thumb img')
+		img = img.attr('src1') ? img.attr('src1') : img.attr('src')
+		returnData.push(
+		{
+			channel: channel,
+			viewers: viewers.replace(',', ' '),
+			count: parseInt(viewers.replace(',', '')),
+			img: img,
+			title: $(this).find('div>p.title a').text(),
+			url: 'http://twitch.tv/' + channel.toLowerCase()
+		})
+	})
+
+	return returnData;
+}
+
+function getStreams() {
+	$('<div/>').load(twitchTvPage + " div.video",
+		function(data) {
+			streams = prepareData($(this));
+			setBadge(streams[0].count);
+		}
+	);
+}
+
 chrome.extension.onMessage.addListener(function(request, sender, sendResponse) {
-	console.log("got details");
-	sendResponse(streams);
+	if (request.getStreams) {
+		console.log("got request: getStreams");
+		sendResponse(streams.slice(0, parseInt(request.getStreams)));
+	}
+
 });
 
-getStreams();
-setInterval(getStreams, 60000);
+
+$(document).ready( function() {
+	getStreams();
+	setInterval(getStreams, 60000);
+});
