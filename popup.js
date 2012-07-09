@@ -1,14 +1,16 @@
-var scrolling = false;
+var scrollTimestamp = false;
 
-function noScrolling() {
-    if (new Date().getTime() - scrolling < 100)
-        return false
-    else
+function doingScrolling(timeStamp) {
+    if (timeStamp - scrollTimestamp < 100) {
         return true
+    }
+    else {
+        return false
+    }
 }
 
 $(window).scroll(function (event) {
-    scrolling = event.timeStamp;
+    scrollTimestamp = event.timeStamp;
 })
 
 chrome.extension.sendMessage({getStreams: 10}, function(response) {
@@ -20,19 +22,23 @@ chrome.extension.sendMessage({getStreams: 10}, function(response) {
             .attr('id', stream.channel + 'Info')
             .appendTo(row);
         $('<div class="info"/>')
-            .append($('<div/>').text(stream.viewers + ' viewers'))
+            .append($('<div/>').html(stream.viewers + ' <span>viewers</span>'))
             .append($('<div/>').text(stream.channel))
             .appendTo(row);
         $(row)
             .click(function() {
                 chrome.tabs.create({url: stream.url});
             })
-            .mouseenter(function() {
-                if(noScrolling())
+            .hover(
+            function(event) {
+                timeout = doingScrolling(event.timeStamp) ? 500 : 100;
+                $(this).data('timeout', setTimeout( function () {
                     $('#' + stream.channel + 'Info').slideDown('fast')
-            })
-            .mouseleave(function() {
-                    $('#' + stream.channel + 'Info').slideUp('fast')
+                }, timeout));                
+            },
+            function() {
+                clearTimeout($(this).data('timeout'));
+                $('#' + stream.channel + 'Info').slideUp('fast')
             })
             .appendTo('#streamList');
         $('<div/>').css('clear', 'both').appendTo('#streamList');
