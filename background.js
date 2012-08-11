@@ -25,7 +25,7 @@ function setBadge(maxViewersCount) {
 function prepareData(data) {
     returnData = []
     data.children().each(function(index) {
-        viewers = $(this).find('div>p.channelname span').text()
+        viewers = $(this).find('div>p.channelname').text().match(/[0-9,]+/)[0]
         channel = $(this).find('div>p.channelname a').text()
         img = $(this).find('a.thumb img')
         img = img.attr('src1') ? img.attr('src1') : img.attr('src')
