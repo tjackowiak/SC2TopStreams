@@ -9,13 +9,21 @@ function doingScrolling(timeStamp) {
     }
 }
 
-$(window).scroll(function (event) {
-    scrollTimestamp = event.timeStamp;
-})
+// format viewers count
+// 1234    -> 1 234
+// 1234567 -> 1234 567
+function formatViewers (viewers) {
+    if (viewers > 1000) {
+        viewers = viewers.toString().replace(/(\d+)(\d{3})$/, '$1 $2');
+    }
+    return viewers
+}
+
 
 chrome.extension.sendMessage({getStreams: 10}, function(response) {
     $.each(response, function(k, stream) {
         var row = $('<div class="main"/>');
+        stream.viewers = formatViewers(stream.viewers);
         $('<img/>').attr({'src': stream.img}).appendTo(row);
         $('<div class="title"/>')
             .text(stream.title).hide()
@@ -44,3 +52,8 @@ chrome.extension.sendMessage({getStreams: 10}, function(response) {
         $('<div/>').css('clear', 'both').appendTo('#streamList');
     });
 });
+
+
+$(window).scroll(function (event) {
+    scrollTimestamp = event.timeStamp;
+})

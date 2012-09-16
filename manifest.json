@@ -1,6 +1,6 @@
 {
     "name": "Starcraft 2 streams on Twitch.tv",
-    "version": "1.2.2",
+    "version": "1.3.0",
     "manifest_version": 2,
     "description": "List of most popular Starcraft 2 streams on Twitch.tv. Stay informed. Never miss an important tournament again!",
     "icons": {
@@ -14,6 +14,6 @@
         "page": "background.html"
     },
     "permissions": [
-        "http://*.twitch.tv/"
-    ]
+        "https://api.twitch.tv/",
+    ],
 }
